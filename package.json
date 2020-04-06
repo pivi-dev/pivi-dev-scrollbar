@@ -1,14 +1,14 @@
 {
-  "name": "react-scrollbar",
-  "version": "0.5.6",
-  "description": "ScrollArea component for react",
+  "name": "pivi-dev-scrollbar",
+  "version": "0.5.7",
+  "description": "Fork of souhe/reactScrollbar",
   "main": "./dist/scrollArea.js",
   "scripts": {
     "test": "./node_modules/.bin/karma start karma.config.js --single-run --browsers PhantomJS"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/souhe/reactScrollbar.git"
+    "url": "https://github.com/pivi-dev/pivi-dev-scrollbar"
   },
   "keywords": [
     "react",
@@ -70,7 +70,7 @@
     "react": "^15.3.0 || ^16.0.0-rc || ^16.0"
   },
   "bugs": {
-    "url": "https://github.com/souhe/reactScrollbar/issues"
+    "url": "https://github.com/pivi-dev/pivi-dev-scrollbar"
   },
-  "homepage": "https://github.com/souhe/reactScrollbar"
+  "homepage": "https://github.com/pivi-dev/pivi-dev-scrollbar"
 }
