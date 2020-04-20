@@ -1,16 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Motion, spring } from 'react-motion';
-import { modifyObjValues } from './utils';
+import { Motion } from 'react-motion';
 
 class ScrollBar extends React.Component {
   constructor(props) {
     super(props);
     let newState = this.calculateState(props);
-    this.state = {
-      position: newState.position,
-      scrollSize: newState.scrollSize,
-    };
+    this.scrollSize = newState.scrollSize;
+    this.position = newState.position;
     this.lastClientPosition = 0;
     this.isDragging = false;
 
@@ -48,7 +45,9 @@ class ScrollBar extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState(this.calculateState(nextProps));
+    const newState = this.calculateState(nextProps);
+    this.position = newState.position;
+    this.scrollSize = newState.scrollSize;
   }
 
   componentWillUnmount() {
@@ -255,13 +254,13 @@ class ScrollBar extends React.Component {
   createScrollStyles() {
     if (this.props.type === 'vertical') {
       return {
-        height: this.state.scrollSize,
-        marginTop: this.state.position,
+        height: this.scrollSize,
+        marginTop: this.position,
       };
     } else {
       return {
-        width: this.state.scrollSize,
-        marginLeft: this.state.position,
+        width: this.scrollSize,
+        marginLeft: this.position,
       };
     }
   }
