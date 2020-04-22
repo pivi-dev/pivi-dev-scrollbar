@@ -242,7 +242,14 @@ export default class ScrollArea extends React.Component {
   }
 
   handleScrollbarMove(deltaY, deltaX) {
-    this.setStateFromEvent(this.composeNewState(deltaX, deltaY));
+    const { topPosition } = this.state;
+    const newState = this.composeNewState(deltaX, deltaY);
+    if (
+      newState.topPosition > topPosition + 5 ||
+      newState.topPosition < topPosition - 5
+    ) {
+      this.setStateFromEvent(newState);
+    }
   }
 
   handleScrollbarXPositionChange(position) {
