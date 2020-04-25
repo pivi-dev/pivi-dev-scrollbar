@@ -398,7 +398,8 @@ export default class ScrollArea extends React.Component {
   }
 
   scrollTop() {
-    this.scrollYTo(0);
+    this.goToScrollbarDirect(0);
+    this.goToContentDirect(0);
   }
 
   scrollBottom() {
