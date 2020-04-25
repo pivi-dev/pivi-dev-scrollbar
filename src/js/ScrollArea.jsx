@@ -23,6 +23,7 @@ export default class ScrollArea extends React.Component {
   constructor(props) {
     super(props);
     this.total = 0;
+    this._that = this;
     this.state = {
       topPosition: 0,
       leftPosition: 0,
@@ -31,6 +32,7 @@ export default class ScrollArea extends React.Component {
       realWidth: 0,
       containerWidth: 0,
     };
+    this.getState = this.getState.bind(this);
 
     this.scrollArea = {
       refresh: () => {
@@ -101,6 +103,7 @@ export default class ScrollArea extends React.Component {
         goToContentDirect={this.goToContentDirect}
         goToScrollbarDirect={this.goToScrollbarDirect}
         goToScrollbar={this.goToScrollbar}
+        getState={this.getState}
         computeMultiplier={this.computeMultiplier}
         type="vertical"
       />
@@ -187,6 +190,7 @@ export default class ScrollArea extends React.Component {
 
       const newState = this.composeNewState(-deltaX, -deltaY);
       const multiplier = this.computeMultiplier();
+      console.log(multiplier, '123');
       this.goToScrollbar(deltaY * -multiplier);
       this.goToContent(deltaY);
 
@@ -233,43 +237,71 @@ export default class ScrollArea extends React.Component {
     };
   }
 
+  getState() {
+    return this.state;
+  }
+
   getScrollContentEl() {
     return document.getElementsByClassName('scrollarea-content')[0];
   }
 
   // ---
 
-  goToScrollbar(pos) {
+  goToScrollbar(pos, state = this.getState()) {
     let el = document.getElementsByClassName('scrollbar')[0];
     const currentPos = -parseFloat(el.style.marginTop);
+    let newPos = currentPos + pos;
+    const maxPos = state.containerHeight - 118.519;
+    const minPos = 0;
 
-    const newPos = currentPos + pos;
-
-    if (newPos >= 0) {
-      return;
+    if (newPos >= minPos) {
+      newPos = 0;
     }
 
-    console.log('goToScrollbar: ' + this.total, 'new val: ' + pos);
+    if (newPos <= -maxPos) {
+      newPos = -maxPos;
+    }
+
+    // console.log('newPos: ' + newPos + ' maxPos: ' + maxPos);
 
     return (el.style.marginTop = -newPos + 'px');
   }
 
   goToScrollbarDirect(pos) {
     let el = document.getElementsByClassName('scrollbar')[0];
-    let newPos = pos;
-    if (pos >= 0) {
+    let newPos = pos + 118.519;
+    const maxPos = -this.containerSize;
+    const minPos = 0;
+    console.log(this.containerSize, 'this.containerSize');
+    console.log('newPos: ' + newPos + ' maxPos: ' + maxPos + ' pos: ' + pos);
+    if (pos >= minPos) {
       newPos = 0;
+    }
+    if (newPos <= maxPos) {
+      newPos = maxPos;
     }
     el.style.marginTop = -newPos + 'px';
   }
 
-  goToContent(pos) {
+  goToContent(pos, state = this.getState()) {
     let el = document.getElementsByClassName('scrollarea-content')[0];
     const currentPos = -parseFloat(el.style.marginTop);
-    const newPos = currentPos + pos;
+    let newPos = currentPos + pos;
+    const maxPos = state.realHeight - state.containerHeight;
+    const minPos = 0;
 
-    if (newPos <= 0) {
-      return;
+    // console.log(
+    //   'newPos: ' + newPos + ' maxPos: ' + maxPos + ' minPos: ' + minPos,
+    //   'realSize: ' + state.realHeight,
+    //   'containerSize: ' + state.containerHeight,
+    // );
+
+    if (newPos <= minPos) {
+      newPos = 0;
+    }
+
+    if (newPos >= maxPos) {
+      newPos = maxPos;
     }
 
     el.style.marginTop = -newPos + 'px';
@@ -277,9 +309,18 @@ export default class ScrollArea extends React.Component {
 
   goToContentDirect(pos) {
     let el = document.getElementsByClassName('scrollarea-content')[0];
-    let newPos = pos;
-    if (pos <= 0) {
+    let newPos = pos + 118.519;
+    const maxPos = this.realSize - this.containerSize;
+    const minPos = 0;
+
+    // console.log(
+    //   'newPos: ' + newPos + ' maxPos: ' + maxPos + ' minPos: ' + minPos,
+    // );
+    if (pos <= minPos) {
       newPos = 0;
+    }
+    if (newPos >= maxPos) {
+      newPos = maxPos;
     }
 
     el.style.marginTop = -newPos + 'px';
