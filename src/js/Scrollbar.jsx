@@ -136,9 +136,9 @@ class ScrollBar extends React.Component {
       this.props.realSize;
     this.isDragging = true;
     this.lastClientPosition = clientPosition;
-    this.props.onPositionChange(
-      (position - proportionalToPageScrollSize / 2) / multiplier,
-    );
+    // this.props.onPositionChange(
+    //   (position - proportionalToPageScrollSize / 2) / multiplier,
+    // );
   }
 
   handleScrollBarContainerTouch(e) {
@@ -160,9 +160,11 @@ class ScrollBar extends React.Component {
     //   (position - proportionalToPageScrollSize / 2) / multiplier,
     // );
     if (e.target.classList.contains('scrollbar-container')) {
-      this.props.goToScrollbarDirect(-position);
+      const state = this.props.getState();
+      this.props.goToScrollbarDirect(-position, state);
       this.props.goToContentDirect(
         (position - proportionalToPageScrollSize / 2) / multiplier,
+        state,
       );
     }
   }
