@@ -1,49 +1,50 @@
-import React from 'react'
+import React from 'react';
 import ScrollArea from 'react-scrollbar';
 
-class SimpleExample extends React.Component{
-    constructor(props){
-        super(props);
+class SimpleExample extends React.Component {
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            itemsCount : 40
-        };
+    this.state = {
+      itemsCount: 30,
+    };
+  }
+
+  handleScroll(scrollData) {
+    console.log(scrollData);
+  }
+
+  render() {
+    var itemElements = [];
+
+    for (var i = 0; i < this.state.itemsCount; i++) {
+      itemElements.push(
+        <div className="item" key={i}>
+          item {i}
+        </div>,
+      );
     }
 
-    handleScroll(scrollData){
-      console.log(scrollData);
-    }
+    let scrollbarStyles = { borderRadius: 5 };
 
-    render() {
-        var itemElements = [];
-
-        for( var i = 0; i< this.state.itemsCount; i++){
-            itemElements.push(<div className="item" key={i}>item {i}</div>);
-        }
-
-        let scrollbarStyles = {borderRadius: 5};
-
-        return (
-            <div>
-                <ScrollArea
-                  className="area"
-                  contentClassName="content"
-                  verticalScrollbarStyle={scrollbarStyles}
-                  verticalContainerStyle={scrollbarStyles}
-                  horizontalScrollbarStyle={scrollbarStyles}
-                  horizontalContainerStyle={scrollbarStyles}
-                  smoothScrolling= {true}
-                  minScrollSize={40}
-                  onScroll={this.handleScroll}
-                  >
-
-                    {itemElements}
-
-                </ScrollArea>
-
-            </div>
-        );
-    }
+    return (
+      <div>
+        <ScrollArea
+          className="area"
+          contentClassName="content"
+          verticalScrollbarStyle={scrollbarStyles}
+          verticalContainerStyle={scrollbarStyles}
+          horizontalScrollbarStyle={scrollbarStyles}
+          horizontalContainerStyle={scrollbarStyles}
+          smoothScrolling={true}
+          minScrollSize={40}
+          onScroll={this.handleScroll}
+        >
+          {itemElements}
+        </ScrollArea>
+      </div>
+    );
+  }
 }
 
 export default SimpleExample;
