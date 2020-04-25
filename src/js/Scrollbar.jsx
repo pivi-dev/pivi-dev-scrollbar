@@ -99,11 +99,9 @@ class ScrollBar extends React.Component {
     let isVertical = type === 'vertical';
     let scrollStyles = this.createScrollStyles();
 
-    let scrollbarClasses = `scrollbar-container ${
+    let scrollbarClasses = `pivi-scrollbar-container scrollbar-container ${
       this.isDragging ? 'active' : ''
     } ${isVoriziontal ? 'horizontal' : ''} ${isVertical ? 'vertical' : ''}`;
-
-    console.log('Scrollbar render');
 
     return (
       <div
@@ -125,6 +123,7 @@ class ScrollBar extends React.Component {
 
   handleScrollBarContainerClick(e) {
     e.preventDefault();
+    e.stopPropagation();
     let multiplier = this.computeMultiplier();
     let clientPosition = this.isVertical() ? e.clientY : e.clientX;
     let { top, left } = this.scrollbarContainer.getBoundingClientRect();
@@ -136,9 +135,14 @@ class ScrollBar extends React.Component {
       this.props.realSize;
     this.isDragging = true;
     this.lastClientPosition = clientPosition;
-    // this.props.onPositionChange(
-    //   (position - proportionalToPageScrollSize / 2) / multiplier,
-    // );
+
+    if (e.target.classList.contains('pivi-scrollbar-container')) {
+      let x = (position - proportionalToPageScrollSize / 2) / multiplier;
+      let p = this.props.containerSize / 2;
+      let y = x + p;
+      this.props.goToScrollbarDirect(-position);
+      this.props.goToContentDirect(y);
+    }
   }
 
   handleScrollBarContainerTouch(e) {
@@ -158,7 +162,7 @@ class ScrollBar extends React.Component {
     this.isDragging = true;
     this.lastClientPosition = clientPosition;
 
-    if (e.target.classList.contains('scrollbar-container')) {
+    if (e.target.classList.contains('pivi-scrollbar-container')) {
       let x = (position - proportionalToPageScrollSize / 2) / multiplier;
       let p = this.props.containerSize / 2;
       let y = x + p;
@@ -168,13 +172,16 @@ class ScrollBar extends React.Component {
   }
 
   handleMouseMoveForVertical(e) {
-    // let multiplier = this.computeMultiplier();
-    // if (this.isDragging) {
-    //   e.preventDefault();
-    //   let deltaY = this.lastClientPosition - e.clientY;
-    //   this.lastClientPosition = e.clientY;
-    //   this.props.onMove(deltaY / multiplier, 0);
-    // }
+    e.stopPropagation();
+    e.stopPropagation();
+
+    if (this.isDragging && e.target.classList.contains('pivi-scrollbar')) {
+      const multiplier = this.computeMultiplier();
+      const deltaY = this.lastClientPosition - e.clientY;
+      this.lastClientPosition = e.clientY;
+      this.props.goToContent(-deltaY / multiplier);
+      this.props.goToScrollbar(deltaY);
+    }
   }
 
   handleTouchMoveForVertical(e) {

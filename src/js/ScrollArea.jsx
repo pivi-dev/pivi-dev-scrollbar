@@ -52,8 +52,6 @@ export default class ScrollArea extends React.Component {
   render() {
     let { children, className, contentClassName, ownerDocument } = this.props;
 
-    console.log('ScrollArea render');
-
     let scrollbarY = this.canScrollY() ? (
       <ScrollBar
         ownerDocument={ownerDocument}
@@ -279,7 +277,7 @@ export default class ScrollArea extends React.Component {
   }
 
   scrollBottom() {
-    this.goToScrollbarDirect(99999999);
+    this.goToScrollbarDirect(-99999999);
     this.goToContentDirect(99999999);
   }
 
