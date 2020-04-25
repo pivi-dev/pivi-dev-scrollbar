@@ -1,14 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import lineHeight from 'line-height';
-import { Motion, spring } from 'react-motion';
 
 import {
   findDOMNode,
   warnAboutFunctionChild,
   warnAboutElementChild,
   positiveOrZero,
-  modifyObjValues,
 } from './utils';
 import ScrollBar from './Scrollbar';
 
@@ -24,6 +22,7 @@ const eventTypes = {
 export default class ScrollArea extends React.Component {
   constructor(props) {
     super(props);
+    this.total = 0;
     this.state = {
       topPosition: 0,
       leftPosition: 0,
@@ -63,9 +62,6 @@ export default class ScrollArea extends React.Component {
       deltaX: 0,
       deltaY: 0,
     };
-
-    this.bindedHandleWindowResize = this.handleWindowResize.bind(this);
-    this.bindedHandleWheel = this.handleWheel.bind(this);
   }
 
   getChildContext() {
@@ -75,27 +71,8 @@ export default class ScrollArea extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.contentWindow) {
-      this.props.contentWindow.addEventListener(
-        'resize',
-        this.bindedHandleWindowResize,
-      );
-    }
     this.lineHeightPx = lineHeight(findDOMNode(this.content));
     this.setSizesToState();
-    this.wrapper.addEventListener('wheel', this.bindedHandleWheel, {
-      passive: false,
-    });
-  }
-
-  componentWillUnmount() {
-    if (this.props.contentWindow) {
-      this.props.contentWindow.removeEventListener(
-        'resize',
-        this.bindedHandleWindowResize,
-      );
-    }
-    this.wrapper.removeEventListener('wheel', this.bindedHandleWheel);
   }
 
   componentDidUpdate() {
@@ -104,7 +81,6 @@ export default class ScrollArea extends React.Component {
 
   render() {
     let { children, className, contentClassName, ownerDocument } = this.props;
-    let withMotion = false;
 
     console.log('ScrollArea render');
 
@@ -121,24 +97,12 @@ export default class ScrollArea extends React.Component {
         smoothScrolling={false}
         minScrollSize={this.props.minScrollSize}
         onFocus={this.focusContent.bind(this)}
+        goToContent={this.goToContent}
+        goToContentDirect={this.goToContentDirect}
+        goToScrollbarDirect={this.goToScrollbarDirect}
+        goToScrollbar={this.goToScrollbar}
+        computeMultiplier={this.computeMultiplier}
         type="vertical"
-      />
-    ) : null;
-
-    let scrollbarX = this.canScrollX() ? (
-      <ScrollBar
-        ownerDocument={ownerDocument}
-        realSize={this.state.realWidth}
-        containerSize={this.state.containerWidth}
-        position={this.state.leftPosition}
-        onMove={this.handleScrollbarMove.bind(this)}
-        onPositionChange={this.handleScrollbarXPositionChange.bind(this)}
-        containerStyle={this.props.horizontalContainerStyle}
-        scrollbarStyle={this.props.horizontalScrollbarStyle}
-        smoothScrolling={false}
-        minScrollSize={this.props.minScrollSize}
-        onFocus={this.focusContent.bind(this)}
-        type="horizontal"
       />
     ) : null;
 
@@ -154,36 +118,27 @@ export default class ScrollArea extends React.Component {
 
     let contentStyle = {
       marginTop: -this.state.topPosition,
-      marginLeft: -this.state.leftPosition,
+      // marginLeft: -this.state.leftPosition,
     };
-    let springifiedContentStyle = withMotion
-      ? modifyObjValues(contentStyle, (x) => spring(x))
-      : contentStyle;
 
     return (
-      <Motion style={springifiedContentStyle}>
-        {(style) => (
-          <div
-            ref={(x) => (this.wrapper = x)}
-            className={classes}
-            style={this.props.style}
-          >
-            <div
-              ref={(x) => (this.content = x)}
-              style={{ ...this.props.contentStyle, ...style }}
-              className={contentClasses}
-              onTouchStart={this.handleTouchStart.bind(this)}
-              onTouchMove={this.handleTouchMove.bind(this)}
-              onKeyDown={this.handleKeyDown.bind(this)}
-              tabIndex={this.props.focusableTabIndex}
-            >
-              {children}
-            </div>
-            {scrollbarY}
-            {scrollbarX}
-          </div>
-        )}
-      </Motion>
+      <div
+        ref={(x) => (this.wrapper = x)}
+        className={classes}
+        style={this.props.style}
+      >
+        <div
+          ref={(x) => (this.content = x)}
+          style={{ ...this.props.contentStyle, ...contentStyle }}
+          className={contentClasses}
+          onTouchStart={this.handleTouchStart.bind(this)}
+          onTouchMove={this.handleTouchMove.bind(this)}
+          tabIndex={this.props.focusableTabIndex}
+        >
+          {children}
+        </div>
+        {scrollbarY}
+      </div>
     );
   }
 
@@ -198,6 +153,7 @@ export default class ScrollArea extends React.Component {
     let { touches } = e;
     if (touches.length === 1) {
       let { clientX, clientY } = touches[0];
+
       this.eventPreviousValues = {
         ...this.eventPreviousValues,
         clientY,
@@ -208,7 +164,6 @@ export default class ScrollArea extends React.Component {
   }
 
   handleTouchMove(e) {
-    const { topPosition } = this.state;
     if (this.canScroll()) {
       e.preventDefault();
       e.stopPropagation();
@@ -231,26 +186,106 @@ export default class ScrollArea extends React.Component {
       };
 
       const newState = this.composeNewState(-deltaX, -deltaY);
+      const multiplier = this.computeMultiplier();
+      this.goToScrollbar(deltaY * -multiplier);
+      this.goToContent(deltaY);
 
-      if (
-        newState.topPosition > topPosition + 1 ||
-        newState.topPosition < topPosition - 1
-      ) {
-        this.setStateFromEvent(newState);
-      }
+      // console.log('this.total', this.total);
+
+      // if (
+      //   newState.topPosition > topPosition + 5 ||
+      //   newState.topPosition < topPosition - 5
+      // ) {
+
+      this.topPosition = newState.topPosition;
+
+      // this.scrollYTo(this.total);
+      // this.goTo(-this.total);
     }
+    // this.setStateFromEvent(newState);
   }
 
   handleScrollbarMove(deltaY, deltaX) {
-    const { topPosition } = this.state;
-    const newState = this.composeNewState(deltaX, deltaY);
-    if (
-      newState.topPosition > topPosition + 5 ||
-      newState.topPosition < topPosition - 5
-    ) {
-      this.setStateFromEvent(newState);
+    // const newState = this.composeNewState(deltaX, deltaY);
+    // this.setStateFromEvent(newState);
+  }
+
+  // goTo() {
+  //   this.content.style.marginTop = -this.total + 'px';
+  // }
+
+  computeMultiplier() {
+    if (this.state !== undefined) {
+      return this.state.containerHeight / this.state.realHeight;
     }
   }
+
+  getScrollSize() {
+    let proportionalToPageScrollSize =
+      (this.containerSize * this.containerSize) / this.realSize;
+    let scrollSize =
+      proportionalToPageScrollSize < this.minScrollSize
+        ? this.minScrollSize
+        : proportionalToPageScrollSize;
+
+    return {
+      scrollSize: scrollSize,
+    };
+  }
+
+  getScrollContentEl() {
+    return document.getElementsByClassName('scrollarea-content')[0];
+  }
+
+  // ---
+
+  goToScrollbar(pos) {
+    let el = document.getElementsByClassName('scrollbar')[0];
+    const currentPos = -parseFloat(el.style.marginTop);
+
+    const newPos = currentPos + pos;
+
+    if (newPos >= 0) {
+      return;
+    }
+
+    console.log('goToScrollbar: ' + this.total, 'new val: ' + pos);
+
+    return (el.style.marginTop = -newPos + 'px');
+  }
+
+  goToScrollbarDirect(pos) {
+    let el = document.getElementsByClassName('scrollbar')[0];
+    let newPos = pos;
+    if (pos >= 0) {
+      newPos = 0;
+    }
+    el.style.marginTop = -newPos + 'px';
+  }
+
+  goToContent(pos) {
+    let el = document.getElementsByClassName('scrollarea-content')[0];
+    const currentPos = -parseFloat(el.style.marginTop);
+    const newPos = currentPos + pos;
+
+    if (newPos <= 0) {
+      return;
+    }
+
+    el.style.marginTop = -newPos + 'px';
+  }
+
+  goToContentDirect(pos) {
+    let el = document.getElementsByClassName('scrollarea-content')[0];
+    let newPos = pos;
+    if (pos <= 0) {
+      newPos = 0;
+    }
+
+    el.style.marginTop = -newPos + 'px';
+  }
+
+  // ---
 
   handleScrollbarXPositionChange(position) {
     this.scrollXTo(position);
@@ -258,95 +293,6 @@ export default class ScrollArea extends React.Component {
 
   handleScrollbarYPositionChange(position) {
     this.scrollYTo(position);
-  }
-
-  handleWheel(e) {
-    let deltaY = e.deltaY;
-    let deltaX = e.deltaX;
-
-    if (this.props.swapWheelAxes) {
-      [deltaY, deltaX] = [deltaX, deltaY];
-    }
-
-    /*
-     * WheelEvent.deltaMode can differ between browsers and must be normalized
-     * e.deltaMode === 0: The delta values are specified in pixels
-     * e.deltaMode === 1: The delta values are specified in lines
-     * https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-     */
-    if (e.deltaMode === 1) {
-      deltaY = deltaY * this.lineHeightPx;
-      deltaX = deltaX * this.lineHeightPx;
-    }
-
-    deltaY = deltaY * this.props.speed;
-    deltaX = deltaX * this.props.speed;
-
-    let newState = this.composeNewState(-deltaX, -deltaY);
-
-    if (
-      (newState.topPosition &&
-        this.state.topPosition !== newState.topPosition) ||
-      (newState.leftPosition &&
-        this.state.leftPosition !== newState.leftPosition) ||
-      this.props.stopScrollPropagation
-    ) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    this.setStateFromEvent(newState, eventTypes.wheel);
-    this.focusContent();
-  }
-
-  handleKeyDown(e) {
-    // only handle if scroll area is in focus
-    if (
-      e.target.tagName.toLowerCase() !== 'input' &&
-      e.target.tagName.toLowerCase() !== 'textarea' &&
-      !e.target.isContentEditable
-    ) {
-      let deltaY = 0;
-      let deltaX = 0;
-      let lineHeight = this.lineHeightPx ? this.lineHeightPx : 10;
-
-      switch (e.keyCode) {
-        case 33: // page up
-          deltaY = this.state.containerHeight - lineHeight;
-          break;
-        case 34: // page down
-          deltaY = -this.state.containerHeight + lineHeight;
-          break;
-        case 37: // left
-          deltaX = lineHeight;
-          break;
-        case 38: // up
-          deltaY = lineHeight;
-          break;
-        case 39: // right
-          deltaX = -lineHeight;
-          break;
-        case 40: // down
-          deltaY = -lineHeight;
-          break;
-      }
-
-      // only compose new state if key code matches those above
-      if (deltaY !== 0 || deltaX !== 0) {
-        let newState = this.composeNewState(deltaX, deltaY);
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.setStateFromEvent(newState, eventTypes.keyPress);
-      }
-    }
-  }
-
-  handleWindowResize() {
-    let newState = this.computeSizes();
-    newState = this.getModifiedPositionsIfNeeded(newState);
-    this.setStateFromEvent(newState);
   }
 
   composeNewState(deltaX, deltaY) {
@@ -434,13 +380,15 @@ export default class ScrollArea extends React.Component {
     this.scrollXTo(this.state.realWidth - this.state.containerWidth);
   }
 
-  scrollYTo(topPosition) {
+  scrollYTo(pos) {
     if (this.canScrollY()) {
-      let position = this.normalizeTopPosition(
-        topPosition,
-        this.computeSizes(),
-      );
-      this.setStateFromEvent({ topPosition: position }, eventTypes.api);
+      // let position = this.normalizeTopPosition(
+      //   topPosition,
+      //   this.computeSizes(),
+      // );
+      // this.setStateFromEvent({ topPosition: position }, eventTypes.api);
+      document.getElementsByClassName('scrollbar')[0].style.marginTop =
+        pos + 'px';
     }
   }
 
