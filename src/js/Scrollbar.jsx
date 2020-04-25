@@ -114,7 +114,7 @@ class ScrollBar extends React.Component {
         ref={(x) => (this.scrollbarContainer = x)}
       >
         <div
-          className="scrollbar scrollbar-handle"
+          className="scrollbar pivi-scrollbar scrollbar-handle"
           style={{ ...scrollbarStyle, ...scrollStyles }}
           onTouchStart={this.handleTouchStart.bind(this)}
           onMouseDown={this.handleMouseDown.bind(this)}
@@ -168,36 +168,25 @@ class ScrollBar extends React.Component {
   }
 
   handleMouseMoveForVertical(e) {
-    let multiplier = this.computeMultiplier();
-
-    if (this.isDragging) {
-      e.preventDefault();
-      let deltaY = this.lastClientPosition - e.clientY;
-      this.lastClientPosition = e.clientY;
-      this.props.onMove(deltaY / multiplier, 0);
-    }
+    // let multiplier = this.computeMultiplier();
+    // if (this.isDragging) {
+    //   e.preventDefault();
+    //   let deltaY = this.lastClientPosition - e.clientY;
+    //   this.lastClientPosition = e.clientY;
+    //   this.props.onMove(deltaY / multiplier, 0);
+    // }
   }
 
   handleTouchMoveForVertical(e) {
     e.stopPropagation();
-    let multiplier = this.computeMultiplier();
+    e.stopPropagation();
 
-    if (this.isDragging && e.target.classList.contains('scrollbar-handle')) {
-      e.stopPropagation();
-      let deltaY = this.lastClientPosition - e.touches[0].clientY;
+    if (this.isDragging && e.target.classList.contains('pivi-scrollbar')) {
+      const multiplier = this.computeMultiplier();
+      const deltaY = this.lastClientPosition - e.touches[0].clientY;
       this.lastClientPosition = e.touches[0].clientY;
-      // this.props.onMove(deltaY / multiplier, 0);
-      // scrollarea-content this.content.style.marginTop;
-      // document.getElementsByClassName('scrollarea-content')[0].style.marginTop;
-
-      // console.log('lemon2s', this.calculateState());
-      // console.log(this);
       this.props.goToContent(-deltaY / multiplier);
       this.props.goToScrollbar(deltaY);
-      // console.log('calculateState', this.calculateState());
-
-      // this.props.goToContent(deltaY / multiplier);
-      // this.goTo(-deltaY);
     }
   }
 
@@ -207,21 +196,14 @@ class ScrollBar extends React.Component {
     let lastClientPosition = this.isVertical() ? e.clientY : e.clientX;
     this.isDragging = true;
     this.lastClientPosition = lastClientPosition;
-
-    this.props.onFocus();
   }
 
   handleTouchStart(e) {
     e.preventDefault();
     e.stopPropagation();
-    // console.log('handleTouchStart');
-    let lastClientPosition = this.isVertical()
-      ? e.changedTouches[0].clientY
-      : e.changedTouches[0].clientX;
+    let lastClientPosition = e.changedTouches[0].clientY;
     this.isDragging = true;
     this.lastClientPosition = lastClientPosition;
-
-    this.props.onFocus();
   }
 
   handleMouseUp(e) {
@@ -244,11 +226,6 @@ class ScrollBar extends React.Component {
         height: this.scrollSize,
         marginTop: this.position,
       };
-    } else {
-      return {
-        width: this.scrollSize,
-        marginLeft: this.position,
-      };
     }
   }
 
@@ -262,8 +239,6 @@ class ScrollBar extends React.Component {
 }
 
 ScrollBar.propTypes = {
-  onMove: PropTypes.func,
-  onPositionChange: PropTypes.func,
   onFocus: PropTypes.func,
   realSize: PropTypes.number,
   containerSize: PropTypes.number,

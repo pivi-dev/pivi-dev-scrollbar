@@ -1,23 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import lineHeight from 'line-height';
 
-import {
-  findDOMNode,
-  warnAboutFunctionChild,
-  warnAboutElementChild,
-  positiveOrZero,
-} from './utils';
+import { positiveOrZero } from './utils';
 import ScrollBar from './Scrollbar';
-
-const eventTypes = {
-  wheel: 'wheel',
-  api: 'api',
-  touch: 'touch',
-  touchEnd: 'touchEnd',
-  mousemove: 'mousemove',
-  keyPress: 'keypress',
-};
 
 export default class ScrollArea extends React.Component {
   constructor(props) {
@@ -31,7 +16,6 @@ export default class ScrollArea extends React.Component {
       realWidth: 0,
       containerWidth: 0,
     };
-    this.getState = this.getState.bind(this);
     this.getScrollSize = this.getScrollSize.bind(this);
     this.goToScrollbar = this.goToScrollbar.bind(this);
     this.goToContent = this.goToContent.bind(this);
@@ -39,26 +23,11 @@ export default class ScrollArea extends React.Component {
     this.goToScrollbarDirect = this.goToScrollbarDirect.bind(this);
 
     this.scrollArea = {
-      refresh: () => {
-        this.setSizesToState();
-      },
       scrollTop: () => {
         this.scrollTop();
       },
       scrollBottom: () => {
         this.scrollBottom();
-      },
-      scrollYTo: (position) => {
-        this.scrollYTo(position);
-      },
-      scrollLeft: () => {
-        this.scrollLeft();
-      },
-      scrollRight: () => {
-        this.scrollRight();
-      },
-      scrollXTo: (position) => {
-        this.scrollXTo(position);
       },
     };
 
@@ -76,25 +45,7 @@ export default class ScrollArea extends React.Component {
     };
   }
 
-  getScrollSize() {
-    let proportionalToPageScrollSize =
-      (this.props.containerSize * this.props.containerSize) /
-      this.props.realSize;
-
-    let scrollSize =
-      proportionalToPageScrollSize < this.props.minScrollSize
-        ? this.props.minScrollSize
-        : proportionalToPageScrollSize;
-
-    return -scrollSize;
-  }
-
   componentDidMount() {
-    this.lineHeightPx = lineHeight(findDOMNode(this.content));
-    this.setSizesToState();
-  }
-
-  componentDidUpdate() {
     this.setSizesToState();
   }
 
@@ -109,36 +60,25 @@ export default class ScrollArea extends React.Component {
         realSize={this.state.realHeight}
         containerSize={this.state.containerHeight}
         position={this.state.topPosition}
-        onMove={this.handleScrollbarMove.bind(this)}
-        onPositionChange={this.handleScrollbarYPositionChange.bind(this)}
         containerStyle={this.props.verticalContainerStyle}
         scrollbarStyle={this.props.verticalScrollbarStyle}
         smoothScrolling={false}
         minScrollSize={this.props.minScrollSize}
-        onFocus={this.focusContent.bind(this)}
         goToContent={this.goToContent}
         goToContentDirect={this.goToContentDirect}
         goToScrollbarDirect={this.goToScrollbarDirect}
         goToScrollbar={this.goToScrollbar}
-        getState={this.getState}
         computeMultiplier={this.computeMultiplier}
         type="vertical"
       />
     ) : null;
 
-    if (typeof children === 'function') {
-      warnAboutFunctionChild();
-      children = children();
-    } else {
-      warnAboutElementChild();
-    }
-
     let classes = 'scrollarea ' + (className || '');
-    let contentClasses = 'scrollarea-content ' + (contentClassName || '');
+    let contentClasses =
+      'scrollarea-content pivi-scrollarea ' + (contentClassName || '');
 
     let contentStyle = {
-      marginTop: -this.state.topPosition,
-      // marginLeft: -this.state.leftPosition,
+      marginTop: 0,
     };
 
     return (
@@ -184,7 +124,7 @@ export default class ScrollArea extends React.Component {
   }
 
   handleTouchMove(e) {
-    if (this.canScroll()) {
+    if (this.canScrollY()) {
       e.preventDefault();
       e.stopPropagation();
     }
@@ -205,23 +145,11 @@ export default class ScrollArea extends React.Component {
         timestamp: Date.now(),
       };
 
-      const newState = this.composeNewState(-deltaX, -deltaY);
       const multiplier = this.computeMultiplier();
       this.goToScrollbar(deltaY * -multiplier);
       this.goToContent(deltaY);
-
-      this.topPosition = newState.topPosition;
     }
   }
-
-  handleScrollbarMove(deltaY, deltaX) {
-    // const newState = this.composeNewState(deltaX, deltaY);
-    // this.setStateFromEvent(newState);
-  }
-
-  // goTo() {
-  //   this.content.style.marginTop = -this.total + 'px';
-  // }
 
   computeMultiplier() {
     if (this.state !== undefined) {
@@ -235,15 +163,10 @@ export default class ScrollArea extends React.Component {
     return height;
   }
 
-  getState() {
-    return this.state;
-  }
-
-  getScrollContentEl() {
-    return document.getElementsByClassName('scrollarea-content')[0];
-  }
-
   goToScrollbar(pos) {
+    if (!this.canScrollY()) {
+      return;
+    }
     let el = document.getElementsByClassName('scrollbar')[0];
     const { containerHeight } = this.state;
     const scrollSize = this.getScrollSize();
@@ -265,6 +188,9 @@ export default class ScrollArea extends React.Component {
   }
 
   goToScrollbarDirect(pos) {
+    if (!this.canScrollY()) {
+      return;
+    }
     const { containerHeight } = this.state;
     let el = document.getElementsByClassName('scrollbar')[0];
     const scrollSize = this.getScrollSize();
@@ -272,7 +198,6 @@ export default class ScrollArea extends React.Component {
     const maxPos = -containerHeight + scrollSize;
     const minPos = 0;
 
-    console.log('newPos: ' + newPos + ' maxPos: ' + maxPos + ' pos: ' + pos);
     if (pos >= minPos) {
       newPos = 0;
     }
@@ -283,7 +208,10 @@ export default class ScrollArea extends React.Component {
   }
 
   goToContent(pos) {
-    let el = document.getElementsByClassName('scrollarea-content')[0];
+    if (!this.canScrollY()) {
+      return;
+    }
+    let el = document.getElementsByClassName('pivi-scrollarea')[0];
     const { realHeight, containerHeight } = this.state;
     const currentPos = -parseFloat(el.style.marginTop);
     let newPos = currentPos + pos;
@@ -302,9 +230,11 @@ export default class ScrollArea extends React.Component {
   }
 
   goToContentDirect(pos) {
-    let el = document.getElementsByClassName('scrollarea-content')[0];
+    if (!this.canScrollY()) {
+      return;
+    }
+    let el = document.getElementsByClassName('pivi-scrollarea')[0];
     const { realHeight, containerHeight } = this.state;
-    console.log(pos, 'pos');
     let newPos = pos;
     const maxPos = realHeight - containerHeight;
     const minPos = 0;
@@ -317,60 +247,6 @@ export default class ScrollArea extends React.Component {
     }
 
     el.style.marginTop = -newPos + 'px';
-  }
-
-  handleScrollbarXPositionChange(position) {
-    this.scrollXTo(position);
-  }
-
-  handleScrollbarYPositionChange(position) {
-    this.scrollYTo(position);
-  }
-
-  composeNewState(deltaX, deltaY) {
-    let newState = this.computeSizes();
-
-    if (this.canScrollY(newState)) {
-      newState.topPosition = this.computeTopPosition(deltaY, newState);
-    } else {
-      newState.topPosition = 0;
-    }
-    if (this.canScrollX(newState)) {
-      newState.leftPosition = this.computeLeftPosition(deltaX, newState);
-    }
-
-    return newState;
-  }
-
-  computeTopPosition(deltaY, sizes) {
-    let newTopPosition = this.state.topPosition - deltaY;
-    return this.normalizeTopPosition(newTopPosition, sizes);
-  }
-
-  computeLeftPosition(deltaX, sizes) {
-    let newLeftPosition = this.state.leftPosition - deltaX;
-    return this.normalizeLeftPosition(newLeftPosition, sizes);
-  }
-
-  normalizeTopPosition(newTopPosition, sizes) {
-    console.log(newTopPosition, sizes);
-    if (newTopPosition > sizes.realHeight - sizes.containerHeight) {
-      newTopPosition = sizes.realHeight - sizes.containerHeight;
-    }
-    if (newTopPosition < 0) {
-      newTopPosition = 0;
-    }
-    return newTopPosition;
-  }
-
-  normalizeLeftPosition(newLeftPosition, sizes) {
-    if (newLeftPosition > sizes.realWidth - sizes.containerWidth) {
-      newLeftPosition = sizes.realWidth - sizes.containerWidth;
-    } else if (newLeftPosition < 0) {
-      newLeftPosition = 0;
-    }
-
-    return newLeftPosition;
   }
 
   computeSizes() {
@@ -403,37 +279,8 @@ export default class ScrollArea extends React.Component {
   }
 
   scrollBottom() {
-    this.scrollYTo(this.state.realHeight - this.state.containerHeight);
-  }
-
-  scrollLeft() {
-    this.scrollXTo(0);
-  }
-
-  scrollRight() {
-    this.scrollXTo(this.state.realWidth - this.state.containerWidth);
-  }
-
-  scrollYTo(pos) {
-    if (this.canScrollY()) {
-      // let position = this.normalizeTopPosition(
-      //   topPosition,
-      //   this.computeSizes(),
-      // );
-      // this.setStateFromEvent({ topPosition: position }, eventTypes.api);
-      document.getElementsByClassName('scrollbar')[0].style.marginTop =
-        pos + 'px';
-    }
-  }
-
-  scrollXTo(leftPosition) {
-    if (this.canScrollX()) {
-      let position = this.normalizeLeftPosition(
-        leftPosition,
-        this.computeSizes(),
-      );
-      this.setStateFromEvent({ leftPosition: position }, eventTypes.api);
-    }
+    this.goToScrollbarDirect(99999999);
+    this.goToContentDirect(99999999);
   }
 
   canScrollY(state = this.state) {
@@ -446,10 +293,6 @@ export default class ScrollArea extends React.Component {
     return scrollableX && this.props.horizontal;
   }
 
-  canScroll(state = this.state) {
-    return this.canScrollY(state) || this.canScrollX(state);
-  }
-
   getModifiedPositionsIfNeeded(newState) {
     let bottomPosition = newState.realHeight - newState.containerHeight;
     if (this.state.topPosition >= bottomPosition) {
@@ -458,20 +301,7 @@ export default class ScrollArea extends React.Component {
         : 0;
     }
 
-    let rightPosition = newState.realWidth - newState.containerWidth;
-    if (this.state.leftPosition >= rightPosition) {
-      newState.leftPosition = this.canScrollX(newState)
-        ? positiveOrZero(rightPosition)
-        : 0;
-    }
-
     return newState;
-  }
-
-  focusContent() {
-    if (this.content) {
-      findDOMNode(this.content).focus();
-    }
   }
 }
 
