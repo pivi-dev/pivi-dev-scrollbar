@@ -143,6 +143,7 @@ class ScrollBar extends React.Component {
 
   handleScrollBarContainerTouch(e) {
     e.preventDefault();
+    e.stopPropagation();
     let multiplier = this.computeMultiplier();
     let clientPosition = this.isVertical()
       ? e.changedTouches[0].clientY
@@ -156,16 +157,13 @@ class ScrollBar extends React.Component {
       this.props.realSize;
     this.isDragging = true;
     this.lastClientPosition = clientPosition;
-    // this.props.onPositionChange(
-    //   (position - proportionalToPageScrollSize / 2) / multiplier,
-    // );
+
     if (e.target.classList.contains('scrollbar-container')) {
-      const state = this.props.getState();
-      this.props.goToScrollbarDirect(-position, state);
-      this.props.goToContentDirect(
-        (position - proportionalToPageScrollSize / 2) / multiplier,
-        state,
-      );
+      let x = (position - proportionalToPageScrollSize / 2) / multiplier;
+      let p = this.props.containerSize / 2;
+      let y = x + p;
+      this.props.goToScrollbarDirect(-position);
+      this.props.goToContentDirect(y);
     }
   }
 
@@ -181,6 +179,7 @@ class ScrollBar extends React.Component {
   }
 
   handleTouchMoveForVertical(e) {
+    e.stopPropagation();
     let multiplier = this.computeMultiplier();
 
     if (this.isDragging && e.target.classList.contains('scrollbar-handle')) {
@@ -193,9 +192,8 @@ class ScrollBar extends React.Component {
 
       // console.log('lemon2s', this.calculateState());
       // console.log(this);
-      const state = this.props.getState();
-      this.props.goToContent(-deltaY / multiplier, state);
-      this.props.goToScrollbar(deltaY, state);
+      this.props.goToContent(-deltaY / multiplier);
+      this.props.goToScrollbar(deltaY);
       // console.log('calculateState', this.calculateState());
 
       // this.props.goToContent(deltaY / multiplier);
@@ -259,7 +257,7 @@ class ScrollBar extends React.Component {
   }
 
   isVertical() {
-    return this.props.type === 'vertical';
+    return true;
   }
 }
 
