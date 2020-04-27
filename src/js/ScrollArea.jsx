@@ -156,20 +156,22 @@ export default class ScrollArea extends React.Component {
   }
 
   getScrollSize() {
-    let el = document.getElementsByClassName('scrollbar-handle')[0];
-    const height = parseFloat(el.style.height);
-    return height;
+    const el = document.getElementsByClassName('pivi-scrollbar');
+    if (el.length) {
+      const height = parseFloat(el[0].style.height);
+      return height;
+    }
   }
 
   goToScrollbar(pos) {
-    if (!this.canScrollY()) {
+    let el = document.getElementsByClassName('pivi-scrollbar');
+    if (!this.canScrollY() || !el.length) {
       return;
     }
-    let el = document.getElementsByClassName('scrollbar')[0];
     const { containerHeight } = this.state;
     const scrollSize = this.getScrollSize();
 
-    const currentPos = -parseFloat(el.style.marginTop);
+    const currentPos = -parseFloat(el[0].style.marginTop);
     let newPos = currentPos + pos;
     const maxPos = containerHeight - scrollSize;
     const minPos = 0;
@@ -182,15 +184,16 @@ export default class ScrollArea extends React.Component {
       newPos = -maxPos;
     }
 
-    return (el.style.marginTop = -newPos + 'px');
+    el[0].style.marginTop = -newPos + 'px';
   }
 
   goToScrollbarDirect(pos) {
-    if (!this.canScrollY()) {
+    let el = document.getElementsByClassName('pivi-scrollbar');
+    if (!this.canScrollY() || !el.length) {
       return;
     }
     const { containerHeight } = this.state;
-    let el = document.getElementsByClassName('scrollbar')[0];
+
     const scrollSize = this.getScrollSize();
     let newPos = pos;
     const maxPos = -containerHeight + scrollSize;
@@ -202,16 +205,16 @@ export default class ScrollArea extends React.Component {
     if (newPos <= maxPos) {
       newPos = maxPos;
     }
-    el.style.marginTop = -newPos + 'px';
+    el[0].style.marginTop = -newPos + 'px';
   }
 
   goToContent(pos) {
-    if (!this.canScrollY()) {
+    let el = document.getElementsByClassName('pivi-scrollarea');
+    if (!this.canScrollY() || !el.length) {
       return;
     }
-    let el = document.getElementsByClassName('pivi-scrollarea')[0];
     const { realHeight, containerHeight } = this.state;
-    const currentPos = -parseFloat(el.style.marginTop);
+    const currentPos = -parseFloat(el[0].style.marginTop);
     let newPos = currentPos + pos;
     const maxPos = realHeight - containerHeight;
     const minPos = 0;
@@ -224,14 +227,14 @@ export default class ScrollArea extends React.Component {
       newPos = maxPos;
     }
 
-    el.style.marginTop = -newPos + 'px';
+    el[0].style.marginTop = -newPos + 'px';
   }
 
   goToContentDirect(pos) {
-    if (!this.canScrollY()) {
+    let el = document.getElementsByClassName('pivi-scrollarea');
+    if (!this.canScrollY() || !el.length) {
       return;
     }
-    let el = document.getElementsByClassName('pivi-scrollarea')[0];
     const { realHeight, containerHeight } = this.state;
     let newPos = pos;
     const maxPos = realHeight - containerHeight;
@@ -244,7 +247,7 @@ export default class ScrollArea extends React.Component {
       newPos = maxPos;
     }
 
-    el.style.marginTop = -newPos + 'px';
+    el[0].style.marginTop = -newPos + 'px';
   }
 
   computeSizes() {

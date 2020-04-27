@@ -122,7 +122,6 @@ class ScrollBar extends React.Component {
   }
 
   handleScrollBarContainerClick(e) {
-    e.preventDefault();
     e.stopPropagation();
     let multiplier = this.computeMultiplier();
     let clientPosition = this.isVertical() ? e.clientY : e.clientX;
@@ -146,7 +145,6 @@ class ScrollBar extends React.Component {
   }
 
   handleScrollBarContainerTouch(e) {
-    e.preventDefault();
     e.stopPropagation();
     let multiplier = this.computeMultiplier();
     let clientPosition = this.isVertical()
@@ -198,7 +196,6 @@ class ScrollBar extends React.Component {
   }
 
   handleMouseDown(e) {
-    e.preventDefault();
     e.stopPropagation();
     let lastClientPosition = this.isVertical() ? e.clientY : e.clientX;
     this.isDragging = true;
@@ -206,7 +203,6 @@ class ScrollBar extends React.Component {
   }
 
   handleTouchStart(e) {
-    e.preventDefault();
     e.stopPropagation();
     let lastClientPosition = e.changedTouches[0].clientY;
     this.isDragging = true;
