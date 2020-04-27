@@ -1,6 +1,6 @@
 # React Scrollbar PIVI
 
-Fork of https://github.com/souhe/reactScrollbar to enable touch event listeners on scroll bar
+Fork of https://github.com/souhe/reactScrollbar
 
 ## Getting Started
 
