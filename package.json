@@ -1,6 +1,6 @@
 {
   "name": "pivi-dev-scrollbar",
-  "version": "0.5.12",
+  "version": "0.5.13",
   "description": "Fork of souhe/reactScrollbar",
   "main": "./dist/scrollArea.js",
   "scripts": {

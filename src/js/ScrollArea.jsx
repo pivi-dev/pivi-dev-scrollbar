@@ -49,6 +49,10 @@ export default class ScrollArea extends React.Component {
     this.setSizesToState();
   }
 
+  componentDidUpdate() {
+    this.setSizesToState();
+  }
+
   render() {
     let { children, className, contentClassName, ownerDocument } = this.props;
 
