@@ -89,6 +89,7 @@ export default class ScrollArea extends React.Component {
         className={classes}
         style={this.props.style}
       >
+        {scrollbarY}
         <div
           ref={(x) => (this.content = x)}
           style={{ ...this.props.contentStyle, ...contentStyle }}
@@ -99,7 +100,6 @@ export default class ScrollArea extends React.Component {
         >
           {children}
         </div>
-        {scrollbarY}
       </div>
     );
   }
