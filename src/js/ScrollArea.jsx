@@ -29,6 +29,12 @@ export default class ScrollArea extends React.Component {
       scrollBottom: () => {
         this.scrollBottom();
       },
+      scrollPageTop: () => {
+        this.scrollPageTop();
+      },
+      scrollPageBottom: () => {
+        this.scrollPageBottom();
+      },
     };
 
     this.evntsPreviousValues = {
@@ -276,6 +282,24 @@ export default class ScrollArea extends React.Component {
     ) {
       this.setStateFromEvent(this.getModifiedPositionsIfNeeded(sizes));
     }
+  }
+
+  scrollPageTop() {
+    const el = document.getElementsByClassName('pivi-scrollarea');
+    const currentPos = -parseFloat(el[0].style.marginTop);
+    const pos = currentPos - this.state.containerHeight;
+    const multiplier = this.computeMultiplier();
+    this.goToScrollbarDirect(pos * -multiplier);
+    this.goToContentDirect(pos);
+  }
+
+  scrollPageBottom() {
+    const el = document.getElementsByClassName('pivi-scrollarea');
+    const currentPos = -parseFloat(el[0].style.marginTop);
+    const pos = currentPos + this.state.containerHeight;
+    const multiplier = this.computeMultiplier();
+    this.goToScrollbarDirect(pos * -multiplier);
+    this.goToContentDirect(pos);
   }
 
   scrollTop() {
